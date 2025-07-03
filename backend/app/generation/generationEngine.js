@@ -1,4 +1,5 @@
 const Generation = require('./index.js');
+const GenerationTable = require('./table.js');
 
 class GenerationEngine {
     constructor() {
@@ -15,12 +16,21 @@ class GenerationEngine {
     }
 
     buildNewGeneration() {
-        this.generation = new Generation();
-        console.log("New dragon generation started. It will expire at " + this.generation.expiration);
+        const generation = new Generation();
+
+        GenerationTable.storeGeneration(generation)
+        .then((result) => {
+            this.generation = generation;
+            this.generation.generationId = result.generationId;
+
+            console.log("New dragon generation started. It will expire at " + this.generation.expiration);
+        }).catch((error) => {
+            console.error("Error storing generation:", error);
+        });
 
         this.timer = setTimeout(
             () => this.buildNewGeneration(),
-            this.generation.expiration.getTime() - Date.now()
+            generation.expiration.getTime() - Date.now()
         );
     }
 }
